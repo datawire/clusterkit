@@ -1,0 +1,18 @@
+---
+# file: haproxy/tasks/main.yml
+
+- name: install haproxy
+  dnf:
+    name: haproxy
+    state: latest
+
+- name: configure haproxy
+  copy:
+    src: haproxy.cfg
+    dest: /etc/haproxy/haproxy.cfg
+
+- name: enable haproxy at system boot and start it
+  service:
+    name: haproxy
+    enabled: yes
+    state: started

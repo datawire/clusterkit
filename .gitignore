@@ -1,0 +1,6 @@
+.directory
+.terraform
+.idea
+*.iml
+*.tfstate*
+etc/inventory/ec2.ini
