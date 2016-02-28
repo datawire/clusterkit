@@ -21,12 +21,13 @@ set -o pipefail
 debug_mode="false"
 
 cluster_name=$(terraform output cluster_autoscaling_group_name)
+instances=""
 force=false
 
 for i in "$@"; do
   case "$i" in
-    -a=*|--all=*)
-      namespace="${i#*=}"
+    -i=*|--instance-id=*)
+      instances="${i#*=}"
     shift
     ;;
     --debug)
@@ -44,14 +45,17 @@ for i in "$@"; do
   esac
 done
 
-echo "--> Setting all instances in the cluster to unhealthy (cluster: ${cluster_name})"
-
-instances=$(\
-  aws autoscaling describe-auto-scaling-groups \
-  --auto-scaling-group-name $(terraform output cluster_autoscaling_group_name) \
-  --query 'AutoScalingGroups[*].Instances[*].[InstanceId]' \
-  --output=text \
-)
+if [ "$instances" == "" ]; then
+  echo "--> Setting all instances in the cluster to unhealthy (cluster: ${cluster_name})"
+  instances=$(\
+    aws autoscaling describe-auto-scaling-groups \
+    --auto-scaling-group-name $(terraform output cluster_autoscaling_group_name) \
+    --query 'AutoScalingGroups[*].Instances[*].[InstanceId]' \
+    --output=text \
+  )
+else
+  echo "--> Setting one instance in the cluster to unhealthy (cluster: ${cluster_name}, instance: ${instances})"
+fi
 
 while read -r instance_id; do
     if [ "${force}" == "true" ]; then
